@@ -49,8 +49,7 @@ dependencies:
   # Dependency Injection
   get_it: ^7.6.0
 
-  # Video Player
-  youtube_player_flutter: ^8.1.2
+  # URL Launcher for videos
   url_launcher: ^6.2.0
 
   # Image Zoom
