@@ -77,11 +77,33 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
     displayedRecipes = _sortRecipes(displayedRecipes);
 
     return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 80,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text(
+            'Our Recipes',
+            style: TextStyle(
+              color: AppColors.darkGrey,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+      ),
       body: Column(
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: 16.0,
+            ),
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
@@ -128,58 +150,88 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
             ),
           ),
           // Filter & Sort Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  // View Mode Toggle
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.borderColor),
-                      borderRadius: BorderRadius.circular(8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                // View Mode Toggle
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.borderColor),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        iconSize: 18,
+                        icon: const Icon(Icons.grid_view),
+                        isSelected: _isGridView,
+                        onPressed: () {
+                          setState(() => _isGridView = true);
+                        },
+                      ),
+                      IconButton(
+                        iconSize: 18,
+                        icon: const Icon(Icons.list),
+                        isSelected: !_isGridView,
+                        onPressed: () {
+                          setState(() => _isGridView = false);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Sort Button
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    setState(() => _sortOrder = value);
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: AppStrings.ascending,
+                      child: Text(AppStrings.ascending),
                     ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          iconSize: 18,
-                          icon: const Icon(Icons.grid_view),
-                          isSelected: _isGridView,
-                          onPressed: () {
-                            setState(() => _isGridView = true);
-                          },
-                        ),
-                        IconButton(
-                          iconSize: 18,
-                          icon: const Icon(Icons.list),
-                          isSelected: !_isGridView,
-                          onPressed: () {
-                            setState(() => _isGridView = false);
-                          },
-                        ),
-                      ],
+                    PopupMenuItem(
+                      value: AppStrings.descending,
+                      child: Text(AppStrings.descending),
+                    ),
+                  ],
+                  child: Chip(
+                    label: Text(
+                      '${AppStrings.sortBy}: $_sortOrder',
+                      style: const TextStyle(color: AppColors.chipText),
+                    ),
+                    backgroundColor: AppColors.chipBackground,
+                    side: const BorderSide(
+                      color: AppColors.primaryPurple,
+                      width: 1.5,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppPadding.horizontalMedium,
+                      vertical: AppPadding.verticalSmall,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Sort Button
-                  PopupMenuButton<String>(
+                ),
+                const SizedBox(width: 8),
+                // Category Filter
+                categories.when(
+                  data: (cats) => PopupMenuButton<String>(
                     onSelected: (value) {
-                      setState(() => _sortOrder = value);
+                      setState(() => _selectedCategory = value);
                     },
                     itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: AppStrings.ascending,
-                        child: Text(AppStrings.ascending),
+                      const PopupMenuItem(
+                        value: '',
+                        child: Text('All Categories'),
                       ),
-                      PopupMenuItem(
-                        value: AppStrings.descending,
-                        child: Text(AppStrings.descending),
+                      ...cats.map(
+                        (cat) => PopupMenuItem(value: cat, child: Text(cat)),
                       ),
                     ],
                     child: Chip(
                       label: Text(
-                        '${AppStrings.sortBy}: $_sortOrder',
+                        _selectedCategory ?? AppStrings.category,
                         style: const TextStyle(color: AppColors.chipText),
                       ),
                       backgroundColor: AppColors.chipBackground,
@@ -193,103 +245,66 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Category Filter
-                  categories.when(
-                    data: (cats) => PopupMenuButton<String>(
-                      onSelected: (value) {
-                        setState(() => _selectedCategory = value);
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: '',
-                          child: Text('All Categories'),
-                        ),
-                        ...cats.map(
-                          (cat) => PopupMenuItem(value: cat, child: Text(cat)),
-                        ),
-                      ],
-                      child: Chip(
-                        label: Text(
-                          _selectedCategory ?? AppStrings.category,
-                          style: const TextStyle(color: AppColors.chipText),
-                        ),
-                        backgroundColor: AppColors.chipBackground,
-                        side: const BorderSide(
-                          color: AppColors.primaryPurple,
-                          width: 1.5,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppPadding.horizontalMedium,
-                          vertical: AppPadding.verticalSmall,
-                        ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const SizedBox(width: 8),
+                // Area Filter
+                areas.when(
+                  data: (areaList) => PopupMenuButton<String>(
+                    onSelected: (value) {
+                      setState(() => _selectedArea = value);
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: '', child: Text('All Areas')),
+                      ...areaList.map(
+                        (area) => PopupMenuItem(value: area, child: Text(area)),
                       ),
-                    ),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                  const SizedBox(width: 8),
-                  // Area Filter
-                  areas.when(
-                    data: (areaList) => PopupMenuButton<String>(
-                      onSelected: (value) {
-                        setState(() => _selectedArea = value);
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: '',
-                          child: Text('All Areas'),
-                        ),
-                        ...areaList.map(
-                          (area) =>
-                              PopupMenuItem(value: area, child: Text(area)),
-                        ),
-                      ],
-                      child: Chip(
-                        label: Text(
-                          _selectedArea ?? AppStrings.area,
-                          style: const TextStyle(color: AppColors.chipText),
-                        ),
-                        backgroundColor: AppColors.chipBackground,
-                        side: const BorderSide(
-                          color: AppColors.primaryPurple,
-                          width: 1.5,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppPadding.horizontalMedium,
-                          vertical: AppPadding.verticalSmall,
-                        ),
-                      ),
-                    ),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                  const SizedBox(width: 8),
-                  // Clear Filters Button
-                  if (_activeFilterCount > 0)
-                    ActionChip(
+                    ],
+                    child: Chip(
                       label: Text(
-                        '${AppStrings.clearFilters} ($_activeFilterCount)',
-                        style: const TextStyle(
-                          color: AppColors.activeChipText,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        _selectedArea ?? AppStrings.area,
+                        style: const TextStyle(color: AppColors.chipText),
                       ),
-                      backgroundColor: AppColors.primaryOrange,
-                      side: BorderSide.none,
+                      backgroundColor: AppColors.chipBackground,
+                      side: const BorderSide(
+                        color: AppColors.primaryPurple,
+                        width: 1.5,
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppPadding.horizontalMedium,
                         vertical: AppPadding.verticalSmall,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _selectedCategory = null;
-                          _selectedArea = null;
-                        });
-                      },
                     ),
-                ],
-              ),
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const SizedBox(width: 8),
+                // Clear Filters Button
+                if (_activeFilterCount > 0)
+                  ActionChip(
+                    label: Text(
+                      '${AppStrings.clearFilters} ($_activeFilterCount)',
+                      style: const TextStyle(
+                        color: AppColors.activeChipText,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: AppColors.primaryOrange,
+                    side: BorderSide.none,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppPadding.horizontalMedium,
+                      vertical: AppPadding.verticalSmall,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory = null;
+                        _selectedArea = null;
+                      });
+                    },
+                  ),
+              ],
             ),
           ),
           SizedBox(height: AppPadding.verticalLarge),

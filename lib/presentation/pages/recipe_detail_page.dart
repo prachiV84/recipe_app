@@ -109,294 +109,317 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Container(
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black26, Colors.transparent],
-                ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      ScaleTransition(
-                        scale: _favoriteScaleAnimation,
-                        child: IconButton(
-                          icon: Icon(
-                            _isFavorite
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: _isFavorite ? Colors.red : Colors.white,
-                            size: 28,
-                          ),
-                          onPressed: _toggleFavorite,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+      appBar: AppBar(
+        toolbarHeight: 80,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        title: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text(
+            'Recipe Details',
+            style: TextStyle(
+              color: AppColors.darkGrey,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
             ),
           ),
-
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            leading: const SizedBox.shrink(),
-            actions: const [SizedBox.shrink()],
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: widget.recipe.idMeal,
-                child: GestureDetector(
-                  onTap: _showFullScreenImageViewer,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        widget.recipe.strMealThumb,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 64,
-                            ),
-                          );
-                        },
-                      ),
-                      // Gradient overlay (only at bottom)
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 120, // Extended for buttons below
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, Colors.black54],
-                            ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          // Fixed Image at Top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 300,
+            child: Hero(
+              tag: widget.recipe.idMeal,
+              child: GestureDetector(
+                onTap: _showFullScreenImageViewer,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      widget.recipe.strMealThumb,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            size: 64,
+                          ),
+                        );
+                      },
+                    ),
+                    // Gradient overlay
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, Colors.black54],
                           ),
                         ),
                       ),
-                      // Zoom indicator (subtle)
-                      Positioned(
-                        bottom: 16,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black12,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.zoom_in,
+                    ),
+                    // Zoom indicator
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Tap to zoom',
+                              style: TextStyle(
                                 color: Colors.white,
-                                size: 14,
+                                fontSize: 11,
                               ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Tap to zoom',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-
-          // Recipe Title
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.recipe.strMeal,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+          // Scrollable Content Below Image
+          Positioned(
+            top: 280,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SingleChildScrollView(
+              child: AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 600),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      Chip(
-                        label: Text(
-                          widget.recipe.strCategory,
-                          style: const TextStyle(
-                            color: AppColors.activeChipText,
-                          ),
-                        ),
-                        backgroundColor: AppColors.primaryOrange,
-                        side: BorderSide.none,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppPadding.horizontalMedium,
-                          vertical: AppPadding.verticalSmall,
-                        ),
-                      ),
-                      Chip(
-                        label: Text(
-                          widget.recipe.strArea,
-                          style: const TextStyle(
-                            color: AppColors.activeChipText,
-                          ),
-                        ),
-                        backgroundColor: const Color.fromARGB(
-                          255,
-                          151,
-                          96,
-                          187,
-                        ),
-                        side: BorderSide.none,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppPadding.horizontalMedium,
-                          vertical: AppPadding.verticalSmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Tab bar
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SliverTabBarDelegate(
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.black87,
-                unselectedLabelColor: Colors.grey[600],
-                indicatorColor: Colors.orange,
-                tabs: const [
-                  Tab(text: AppStrings.overview),
-                  Tab(text: AppStrings.ingredients),
-                  Tab(text: AppStrings.instructions),
-                ],
-              ),
-            ),
-          ),
-          // Tab Content
-          SliverFillRemaining(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Overview Tab
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Category: ${widget.recipe.strCategory}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Area: ${widget.recipe.strArea}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      if (widget.recipe.strYoutube.isNotEmpty)
-                        _YouTubePlayerSection(
-                          youtubeUrl: widget.recipe.strYoutube,
-                        ),
-                    ],
-                  ),
-                ),
-                // Ingredients Tab
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        AppStrings.ingredients,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ...widget.recipe.ingredients.entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  '${entry.key} - ${entry.value}',
-                                  style: const TextStyle(fontSize: 14),
+                      // Recipe Title and Chips
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.recipe.strMeal,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
                                 ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    Chip(
+                                      label: Text(
+                                        widget.recipe.strCategory,
+                                        style: const TextStyle(
+                                          color: AppColors.activeChipText,
+                                        ),
+                                      ),
+                                      backgroundColor: AppColors.primaryOrange,
+                                      side: BorderSide.none,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppPadding.horizontalMedium,
+                                        vertical: AppPadding.verticalSmall,
+                                      ),
+                                    ),
+                                    Chip(
+                                      label: Text(
+                                        widget.recipe.strArea,
+                                        style: const TextStyle(
+                                          color: AppColors.activeChipText,
+                                        ),
+                                      ),
+                                      backgroundColor: const Color.fromARGB(
+                                        255,
+                                        151,
+                                        96,
+                                        187,
+                                      ),
+                                      side: BorderSide.none,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppPadding.horizontalMedium,
+                                        vertical: AppPadding.verticalSmall,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                ScaleTransition(
+                                  scale: _favoriteScaleAnimation,
+                                  child: IconButton(
+                                    iconSize: 32,
+                                    icon: Icon(
+                                      _isFavorite
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: _isFavorite
+                                          ? Colors.redAccent
+                                          : Colors.grey[600],
+                                    ),
+                                    onPressed: _toggleFavorite,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Tab bar
+                      Container(
+                        color: Colors.white,
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: Colors.black87,
+                          unselectedLabelColor: Colors.grey[600],
+                          indicatorColor: Colors.orange,
+                          tabs: const [
+                            Tab(text: AppStrings.overview),
+                            Tab(text: AppStrings.ingredients),
+                            Tab(text: AppStrings.instructions),
+                          ],
+                        ),
+                      ),
+                      // Tab Content
+                      SizedBox(
+                        height: 500,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            // Overview Tab
+                            SingleChildScrollView(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Category: ${widget.recipe.strCategory}',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Area: ${widget.recipe.strArea}',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  if (widget.recipe.strYoutube.isNotEmpty)
+                                    _YouTubePlayerSection(
+                                      youtubeUrl: widget.recipe.strYoutube,
+                                    ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            // Ingredients Tab
+                            SingleChildScrollView(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    AppStrings.ingredients,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ...widget.recipe.ingredients.entries.map(
+                                    (entry) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.check_circle,
+                                            color: Colors.green,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              '${entry.key} - ${entry.value}',
+                                              style:
+                                                  const TextStyle(fontSize: 14),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Instructions Tab
+                            SingleChildScrollView(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    AppStrings.instructions,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ..._buildInstructions(
+                                    widget.recipe.strInstructions,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
-                // Instructions Tab
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        AppStrings.instructions,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ..._buildInstructions(widget.recipe.strInstructions),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -437,32 +460,6 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
         ),
       );
     }).toList();
-  }
-}
-
-// Sliver Tab Bar Delegate
-class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverTabBarDelegate(this._tabBar);
-
-  final TabBar _tabBar;
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(color: Colors.white, child: _tabBar);
-  }
-
-  @override
-  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
   }
 }
 
