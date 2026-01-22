@@ -22,12 +22,16 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
   late TabController _tabController;
   late AnimationController _favoriteAnimationController;
   late Animation<double> _favoriteScaleAnimation;
+  late ScrollController _scrollController;
   bool _isFavorite = false;
+  double _scrollOffset = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _scrollController = ScrollController();
+    _scrollController.addListener(_handleScroll);
     _favoriteAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -41,9 +45,16 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
     _checkIfFavorite();
   }
 
+  void _handleScroll() {
+    setState(() {
+      _scrollOffset = _scrollController.offset;
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
+    _scrollController.dispose();
     _favoriteAnimationController.dispose();
     super.dispose();
   }
@@ -187,11 +198,7 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.zoom_in,
-                              color: Colors.white,
-                              size: 14,
-                            ),
+                            Icon(Icons.zoom_in, color: Colors.white, size: 14),
                             SizedBox(width: 4),
                             Text(
                               'Tap to zoom',
@@ -216,207 +223,216 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
             right: 0,
             bottom: 0,
             child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
               child: AnimatedOpacity(
                 opacity: 1.0,
                 duration: const Duration(milliseconds: 600),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                child: Transform.translate(
+                  offset: Offset(0, _scrollOffset * 0.1),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Recipe Title and Chips
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.recipe.strMeal,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
+                    child: Column(
+                      children: [
+                        // Recipe Title and Chips
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.recipe.strMeal,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  children: [
-                                    Chip(
-                                      label: Text(
-                                        widget.recipe.strCategory,
-                                        style: const TextStyle(
-                                          color: AppColors.activeChipText,
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      Chip(
+                                        label: Text(
+                                          widget.recipe.strCategory,
+                                          style: const TextStyle(
+                                            color: AppColors.activeChipText,
+                                          ),
+                                        ),
+                                        backgroundColor:
+                                            AppColors.primaryOrange,
+                                        side: BorderSide.none,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal:
+                                              AppPadding.horizontalMedium,
+                                          vertical: AppPadding.verticalSmall,
                                         ),
                                       ),
-                                      backgroundColor: AppColors.primaryOrange,
-                                      side: BorderSide.none,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppPadding.horizontalMedium,
-                                        vertical: AppPadding.verticalSmall,
+                                      Chip(
+                                        label: Text(
+                                          widget.recipe.strArea,
+                                          style: const TextStyle(
+                                            color: AppColors.activeChipText,
+                                          ),
+                                        ),
+                                        backgroundColor: const Color.fromARGB(
+                                          255,
+                                          151,
+                                          96,
+                                          187,
+                                        ),
+                                        side: BorderSide.none,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal:
+                                              AppPadding.horizontalMedium,
+                                          vertical: AppPadding.verticalSmall,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  ScaleTransition(
+                                    scale: _favoriteScaleAnimation,
+                                    child: IconButton(
+                                      iconSize: 32,
+                                      icon: Icon(
+                                        _isFavorite
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: _isFavorite
+                                            ? Colors.redAccent
+                                            : Colors.grey[600],
+                                      ),
+                                      onPressed: _toggleFavorite,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Tab bar
+                        Container(
+                          color: Colors.white,
+                          child: TabBar(
+                            controller: _tabController,
+                            labelColor: Colors.black87,
+                            unselectedLabelColor: Colors.grey[600],
+                            indicatorColor: Colors.orange,
+                            tabs: const [
+                              Tab(text: AppStrings.overview),
+                              Tab(text: AppStrings.ingredients),
+                              Tab(text: AppStrings.instructions),
+                            ],
+                          ),
+                        ),
+                        // Tab Content
+                        SizedBox(
+                          height: 500,
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              // Overview Tab
+                              SingleChildScrollView(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Category: ${widget.recipe.strCategory}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Area: ${widget.recipe.strArea}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    if (widget.recipe.strYoutube.isNotEmpty)
+                                      _YouTubePlayerSection(
+                                        youtubeUrl: widget.recipe.strYoutube,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              // Ingredients Tab
+                              SingleChildScrollView(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      AppStrings.ingredients,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Chip(
-                                      label: Text(
-                                        widget.recipe.strArea,
-                                        style: const TextStyle(
-                                          color: AppColors.activeChipText,
+                                    const SizedBox(height: 16),
+                                    ...widget.recipe.ingredients.entries.map(
+                                      (entry) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0,
                                         ),
-                                      ),
-                                      backgroundColor: const Color.fromARGB(
-                                        255,
-                                        151,
-                                        96,
-                                        187,
-                                      ),
-                                      side: BorderSide.none,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppPadding.horizontalMedium,
-                                        vertical: AppPadding.verticalSmall,
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.check_circle,
+                                              color: Colors.green,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                '${entry.key} - ${entry.value}',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                ScaleTransition(
-                                  scale: _favoriteScaleAnimation,
-                                  child: IconButton(
-                                    iconSize: 32,
-                                    icon: Icon(
-                                      _isFavorite
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      color: _isFavorite
-                                          ? Colors.redAccent
-                                          : Colors.grey[600],
+                              ),
+                              // Instructions Tab
+                              SingleChildScrollView(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      AppStrings.instructions,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    onPressed: _toggleFavorite,
-                                  ),
+                                    const SizedBox(height: 16),
+                                    ..._buildInstructions(
+                                      widget.recipe.strInstructions,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Tab bar
-                      Container(
-                        color: Colors.white,
-                        child: TabBar(
-                          controller: _tabController,
-                          labelColor: Colors.black87,
-                          unselectedLabelColor: Colors.grey[600],
-                          indicatorColor: Colors.orange,
-                          tabs: const [
-                            Tab(text: AppStrings.overview),
-                            Tab(text: AppStrings.ingredients),
-                            Tab(text: AppStrings.instructions),
-                          ],
-                        ),
-                      ),
-                      // Tab Content
-                      SizedBox(
-                        height: 500,
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            // Overview Tab
-                            SingleChildScrollView(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Category: ${widget.recipe.strCategory}',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Area: ${widget.recipe.strArea}',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  if (widget.recipe.strYoutube.isNotEmpty)
-                                    _YouTubePlayerSection(
-                                      youtubeUrl: widget.recipe.strYoutube,
-                                    ),
-                                ],
                               ),
-                            ),
-                            // Ingredients Tab
-                            SingleChildScrollView(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    AppStrings.ingredients,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ...widget.recipe.ingredients.entries.map(
-                                    (entry) => Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8.0,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.check_circle,
-                                            color: Colors.green,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              '${entry.key} - ${entry.value}',
-                                              style:
-                                                  const TextStyle(fontSize: 14),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Instructions Tab
-                            SingleChildScrollView(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    AppStrings.instructions,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ..._buildInstructions(
-                                    widget.recipe.strInstructions,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ),
                 ),
               ),
