@@ -152,6 +152,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
           // Filter & Sort Bar
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
                 // View Mode Toggle
@@ -307,7 +308,7 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
               ],
             ),
           ),
-          SizedBox(height: AppPadding.verticalLarge),
+          SizedBox(height: AppPadding.verticalSmall),
           // Recipes Grid/List
           Expanded(
             child: searchState.isLoading

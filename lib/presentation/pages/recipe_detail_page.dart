@@ -231,9 +231,7 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
                 child: Transform.translate(
                   offset: Offset(0, _scrollOffset * 0.1),
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                    ),
+                    decoration: const BoxDecoration(color: Colors.white),
                     child: Column(
                       children: [
                         // Recipe Title and Chips
