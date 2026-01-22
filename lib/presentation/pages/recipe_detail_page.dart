@@ -233,10 +233,6 @@ class _RecipeDetailPageState extends ConsumerState<RecipeDetailPage>
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
                     ),
                     child: Column(
                       children: [
