@@ -677,32 +677,39 @@ class _YouTubePlayerSectionState extends State<_YouTubePlayerSection> {
         throw Exception('No YouTube URL available');
       }
       
-      // Convert youtube.com/watch?v= to youtu.be format if needed
-      if (youtubeUrl.contains('youtube.com/watch?v=')) {
-        // Already in correct format
-      } else if (youtubeUrl.contains('youtu.be/')) {
-        // Already in correct format
-      } else if (!youtubeUrl.startsWith('http')) {
-        // Add https if missing
+      // Ensure URL has proper https prefix
+      if (!youtubeUrl.startsWith('http')) {
         youtubeUrl = 'https://$youtubeUrl';
       }
 
       final url = Uri.parse(youtubeUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Unable to open video. URL: $youtubeUrl'),
-            ),
-          );
+      
+      // Try to launch with platformDefault mode first (works better on Android)
+      try {
+        await launchUrl(url);
+      } catch (launchError) {
+        // If platformDefault fails, try externalApplication
+        try {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } catch (externalError) {
+          // If both fail, show detailed error
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Cannot open video. Make sure a browser is installed. URL: $youtubeUrl'),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          SnackBar(
+            content: Text('Error loading video: ${e.toString()}'),
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     } finally {
