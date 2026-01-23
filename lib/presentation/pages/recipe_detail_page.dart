@@ -666,48 +666,83 @@ class _YouTubePlayerSection extends StatefulWidget {
 class _YouTubePlayerSectionState extends State<_YouTubePlayerSection> {
   bool _isLoading = false;
 
+  String _extractVideoId(String url) {
+    // Handle youtu.be URLs
+    if (url.contains('youtu.be/')) {
+      return url.split('youtu.be/')[1].split('?').first;
+    }
+    // Handle youtube.com/watch?v= URLs
+    if (url.contains('v=')) {
+      return url.split('v=')[1].split('&').first;
+    }
+    return '';
+  }
+
   Future<void> _openVideo() async {
     setState(() => _isLoading = true);
 
     try {
       String youtubeUrl = widget.youtubeUrl.trim();
-      
-      // Fix common YouTube URL issues
+
       if (youtubeUrl.isEmpty) {
         throw Exception('No YouTube URL available');
       }
+
+      // Extract video ID for YouTube app launch attempt
+      String videoId = _extractVideoId(youtubeUrl);
       
       // Ensure URL has proper https prefix
       if (!youtubeUrl.startsWith('http')) {
         youtubeUrl = 'https://$youtubeUrl';
       }
 
-      final url = Uri.parse(youtubeUrl);
-      
-      // Try to launch with platformDefault mode first (works better on Android)
-      try {
-        await launchUrl(url);
-      } catch (launchError) {
-        // If platformDefault fails, try externalApplication
+      bool opened = false;
+
+      // Try YouTube app first (Android only)
+      if (videoId.isNotEmpty) {
+        try {
+          final youtubeAppUrl = Uri.parse('youtube://www.youtube.com/watch?v=$videoId');
+          if (await canLaunchUrl(youtubeAppUrl)) {
+            await launchUrl(youtubeAppUrl);
+            opened = true;
+          }
+        } catch (_) {
+          // YouTube app not available, continue to browser
+        }
+      }
+
+      // If YouTube app didn't work, try browser
+      if (!opened) {
+        final url = Uri.parse(youtubeUrl);
         try {
           await launchUrl(url, mode: LaunchMode.externalApplication);
-        } catch (externalError) {
-          // If both fail, show detailed error
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Cannot open video. Make sure a browser is installed. URL: $youtubeUrl'),
-                duration: const Duration(seconds: 4),
-              ),
-            );
+          opened = true;
+        } catch (_) {
+          // externalApplication failed, try platformDefault
+          try {
+            await launchUrl(url);
+            opened = true;
+          } catch (_) {
+            // All methods failed
           }
         }
+      }
+
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Cannot open video. Please install YouTube app or browser.\nURL: $youtubeUrl',
+            ),
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading video: ${e.toString()}'),
+            content: Text('Error: ${e.toString()}'),
             duration: const Duration(seconds: 4),
           ),
         );
