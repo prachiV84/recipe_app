@@ -670,21 +670,40 @@ class _YouTubePlayerSectionState extends State<_YouTubePlayerSection> {
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse(widget.youtubeUrl);
+      String youtubeUrl = widget.youtubeUrl.trim();
+      
+      // Fix common YouTube URL issues
+      if (youtubeUrl.isEmpty) {
+        throw Exception('No YouTube URL available');
+      }
+      
+      // Convert youtube.com/watch?v= to youtu.be format if needed
+      if (youtubeUrl.contains('youtube.com/watch?v=')) {
+        // Already in correct format
+      } else if (youtubeUrl.contains('youtu.be/')) {
+        // Already in correct format
+      } else if (!youtubeUrl.startsWith('http')) {
+        // Add https if missing
+        youtubeUrl = 'https://$youtubeUrl';
+      }
+
+      final url = Uri.parse(youtubeUrl);
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Unable to open video')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Unable to open video. URL: $youtubeUrl'),
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
       }
     } finally {
       if (mounted) {
